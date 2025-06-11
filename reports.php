@@ -2,7 +2,7 @@
 session_start();
 require_once "config/database.php";
 
-if(!isset($_SESSION["loggedin"]) || $_SESSION["loggedin"] !== true){
+if (!isset($_SESSION["loggedin"]) || $_SESSION["loggedin"] !== true) {
     header("location: index.php");
     exit;
 }
@@ -41,17 +41,24 @@ $sql_summary = "SELECT
     (SELECT SUM(quantity) FROM requisitions WHERE status = 'approved' AND created_at BETWEEN ? AND ?) as total_approved_quantity";
 
 $stmt = mysqli_prepare($conn, $sql_summary);
-if($stmt) {
-    mysqli_stmt_bind_param($stmt, "ssssssssss", 
-        $start_date, $end_date,
-        $start_date, $end_date,
-        $start_date, $end_date,
-        $start_date, $end_date,
-        $start_date, $end_date
+if ($stmt) {
+    mysqli_stmt_bind_param(
+        $stmt,
+        "ssssssssss",
+        $start_date,
+        $end_date,
+        $start_date,
+        $end_date,
+        $start_date,
+        $end_date,
+        $start_date,
+        $end_date,
+        $start_date,
+        $end_date
     );
     mysqli_stmt_execute($stmt);
     $summary_result = mysqli_stmt_get_result($stmt);
-    if($summary_result) {
+    if ($summary_result) {
         $summary_data = mysqli_fetch_assoc($summary_result);
         $inventory_data = [
             'total_items' => $summary_data['total_items'] ?? 0,
@@ -80,7 +87,7 @@ $sql_categories = "SELECT
     GROUP BY c.id, c.name
     ORDER BY item_count DESC";
 $categories_result = mysqli_query($conn, $sql_categories);
-if(!$categories_result) {
+if (!$categories_result) {
     echo "Error in categories query: " . mysqli_error($conn);
 }
 
@@ -97,7 +104,7 @@ $sql_trends = "SELECT
     LIMIT 12"; // Limit to last 12 months
 
 $stmt = mysqli_prepare($conn, $sql_trends);
-if($stmt) {
+if ($stmt) {
     mysqli_stmt_bind_param($stmt, "ss", $start_date, $end_date);
     mysqli_stmt_execute($stmt);
     $trends_result = mysqli_stmt_get_result($stmt);
@@ -112,7 +119,7 @@ $sql_low_stock = "SELECT i.*, c.name as category_name
     ORDER BY i.quantity ASC
     LIMIT 50"; // Limit to 50 items
 $low_stock_result = mysqli_query($conn, $sql_low_stock);
-if(!$low_stock_result) {
+if (!$low_stock_result) {
     echo "Error in low stock query: " . mysqli_error($conn);
 }
 
@@ -127,7 +134,7 @@ $sql_recent_requisitions = "SELECT r.*, i.item_name, i.unit, u.username, c.name 
     LIMIT 20"; // Limit to 20 recent requisitions
 
 $stmt = mysqli_prepare($conn, $sql_recent_requisitions);
-if($stmt) {
+if ($stmt) {
     mysqli_stmt_bind_param($stmt, "ss", $start_date, $end_date);
     mysqli_stmt_execute($stmt);
     $recent_requisitions = mysqli_stmt_get_result($stmt);
@@ -138,8 +145,8 @@ if($stmt) {
 $months = [];
 $approved = [];
 $rejected = [];
-if(isset($trends_result)) {
-    while($row = mysqli_fetch_assoc($trends_result)) {
+if (isset($trends_result)) {
+    while ($row = mysqli_fetch_assoc($trends_result)) {
         $months[] = date('M Y', strtotime($row['month'] . '-01'));
         $approved[] = $row['approved_count'];
         $rejected[] = $row['rejected_count'];
@@ -149,6 +156,7 @@ if(isset($trends_result)) {
 
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <title>Reports - SIMS</title>
@@ -160,71 +168,94 @@ if(isset($trends_result)) {
             height: 100vh;
             background-color: #343a40;
             padding-top: 20px;
+            position: sticky;
+            top: 0;
+            /* Optional: add overflow-y if sidebar content may overflow */
+            overflow-y: auto;
         }
+
         .sidebar a {
             color: white;
             text-decoration: none;
             padding: 10px 15px;
             display: block;
         }
+
         .sidebar a:hover {
             background-color: #495057;
         }
+
         .content {
             padding: 20px;
         }
+
         .chart-container {
             position: relative;
             height: 300px;
             width: 100%;
         }
-        
+
         /* Print styles */
         @media print {
-            .sidebar, .no-print {
+
+            .sidebar,
+            .no-print {
                 display: none !important;
             }
+
             .content {
                 width: 100% !important;
                 margin: 0 !important;
                 padding: 0 !important;
             }
+
             .col-md-10 {
                 width: 100% !important;
                 flex: 0 0 100% !important;
                 max-width: 100% !important;
             }
+
             .card {
                 break-inside: avoid;
                 page-break-inside: avoid;
                 border: 1px solid #ddd !important;
             }
+
             .chart-container {
                 height: 200px !important;
             }
+
             .table {
                 font-size: 12px !important;
             }
+
             .card-title {
                 font-size: 16px !important;
             }
+
             .card-text {
                 font-size: 14px !important;
             }
+
             .container-fluid {
                 width: 100% !important;
                 padding: 0 !important;
                 margin: 0 !important;
             }
+
             .row {
                 margin: 0 !important;
             }
-            .col-md-3, .col-md-6, .col-md-12 {
+
+            .col-md-3,
+            .col-md-6,
+            .col-md-12 {
                 padding: 0 10px !important;
             }
         }
     </style>
 </head>
+
 <body>
     <div class="container-fluid">
         <div class="row">
@@ -249,11 +280,13 @@ if(isset($trends_result)) {
                         <form class="form-inline mr-3">
                             <div class="form-group mx-sm-3">
                                 <label for="start_date" class="mr-2">From:</label>
-                                <input type="date" class="form-control" id="start_date" name="start_date" value="<?php echo $start_date; ?>">
+                                <input type="date" class="form-control" id="start_date" name="start_date"
+                                    value="<?php echo $start_date; ?>">
                             </div>
                             <div class="form-group mx-sm-3">
                                 <label for="end_date" class="mr-2">To:</label>
-                                <input type="date" class="form-control" id="end_date" name="end_date" value="<?php echo $end_date; ?>">
+                                <input type="date" class="form-control" id="end_date" name="end_date"
+                                    value="<?php echo $end_date; ?>">
                             </div>
                             <button type="submit" class="btn btn-primary mr-2">Filter</button>
                         </form>
@@ -347,8 +380,8 @@ if(isset($trends_result)) {
                                         </thead>
                                         <tbody>
                                             <?php
-                                            if($categories_result) {
-                                                while($row = mysqli_fetch_assoc($categories_result)) {
+                                            if ($categories_result) {
+                                                while ($row = mysqli_fetch_assoc($categories_result)) {
                                                     echo "<tr>";
                                                     echo "<td>" . htmlspecialchars($row['category_name']) . "</td>";
                                                     echo "<td>" . htmlspecialchars($row['item_count']) . "</td>";
@@ -386,8 +419,8 @@ if(isset($trends_result)) {
                                         </thead>
                                         <tbody>
                                             <?php
-                                            if($low_stock_result) {
-                                                while($row = mysqli_fetch_assoc($low_stock_result)) {
+                                            if ($low_stock_result) {
+                                                while ($row = mysqli_fetch_assoc($low_stock_result)) {
                                                     echo "<tr>";
                                                     echo "<td>" . htmlspecialchars($row['item_name']) . "</td>";
                                                     echo "<td>" . htmlspecialchars($row['category_name']) . "</td>";
@@ -423,10 +456,10 @@ if(isset($trends_result)) {
                                         </thead>
                                         <tbody>
                                             <?php
-                                            if(isset($recent_requisitions)) {
-                                                while($row = mysqli_fetch_assoc($recent_requisitions)) {
+                                            if (isset($recent_requisitions)) {
+                                                while ($row = mysqli_fetch_assoc($recent_requisitions)) {
                                                     $status_class = '';
-                                                    switch($row['status']) {
+                                                    switch ($row['status']) {
                                                         case 'pending':
                                                             $status_class = 'warning';
                                                             break;
@@ -437,7 +470,7 @@ if(isset($trends_result)) {
                                                             $status_class = 'danger';
                                                             break;
                                                     }
-                                                    
+
                                                     echo "<tr>";
                                                     echo "<td>" . htmlspecialchars($row['item_name']) . "</td>";
                                                     echo "<td>" . htmlspecialchars($row['category_name']) . "</td>";
@@ -514,4 +547,5 @@ if(isset($trends_result)) {
         });
     </script>
 </body>
-</html> 
+
+</html>

@@ -7,8 +7,8 @@ $result = mysqli_query($conn, $check_sql);
 
 if(mysqli_num_rows($result) == 0) {
     // Create admin user
-    $username = "admin";
-    $password = "admin123";
+    $username = "store";
+    $password = "store";
     $hashed_password = password_hash($password, PASSWORD_DEFAULT);
     
     $sql = "INSERT INTO users (username, password) VALUES (?, ?)";
@@ -18,8 +18,8 @@ if(mysqli_num_rows($result) == 0) {
         
         if(mysqli_stmt_execute($stmt)){
             echo "Admin user created successfully!<br>";
-            echo "Username: admin<br>";
-            echo "Password: admin123<br>";
+            echo "Username: store<br>";
+            echo "Password: store<br>";
             echo "<a href='index.php'>Go to login page</a>";
         } else{
             echo "Error creating admin user: " . mysqli_error($conn);
@@ -33,4 +33,4 @@ if(mysqli_num_rows($result) == 0) {
 }
 
 mysqli_close($conn);
-?> 
+?>
