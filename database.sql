@@ -3,7 +3,9 @@ CREATE TABLE IF NOT EXISTS users (
     id INT NOT NULL PRIMARY KEY AUTO_INCREMENT,
     username VARCHAR(50) NOT NULL UNIQUE,
     password VARCHAR(255) NOT NULL,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    created_by INT,
+    FOREIGN KEY (created_by) REFERENCES admin_users(id)
 );
 
 -- Create categories table
@@ -45,6 +47,21 @@ CREATE TABLE IF NOT EXISTS requisitions (
     INDEX idx_item_status (item_id, status)
 );
 
+-- Create admin_users table
+CREATE TABLE IF NOT EXISTS admin_users (
+    id INT NOT NULL PRIMARY KEY AUTO_INCREMENT,
+    username VARCHAR(50) NOT NULL UNIQUE,
+    password VARCHAR(255) NOT NULL,
+    email VARCHAR(100) NOT NULL UNIQUE,
+    full_name VARCHAR(100) NOT NULL,
+    role ENUM('super_admin', 'admin') NOT NULL DEFAULT 'admin',
+    status ENUM('active', 'inactive') NOT NULL DEFAULT 'active',
+    created_by INT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (created_by) REFERENCES admin_users(id)
+);
+
 -- Insert default admin user (password: admin123)
 INSERT INTO users (username, password) VALUES 
 ('admin', '$2y$10$8K1p/a0dR1xqM8K3vX5K3.3K3K3K3K3K3K3K3K3K3K3K3K3K3K3K3');
@@ -54,4 +71,8 @@ INSERT INTO categories (name, description) VALUES
 ('Office Supplies', 'General office supplies and stationery'),
 ('Electronics', 'Electronic devices and accessories'),
 ('Furniture', 'Office furniture and fixtures'),
-('Maintenance', 'Maintenance and cleaning supplies'); 
+('Maintenance', 'Maintenance and cleaning supplies');
+
+-- Add admin_users foreign key to users table
+ALTER TABLE users ADD COLUMN created_by INT;
+ALTER TABLE users ADD FOREIGN KEY (created_by) REFERENCES admin_users(id); 

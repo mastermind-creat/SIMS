@@ -24,39 +24,64 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
     }
     
     if(empty($username_err) && empty($password_err)){
-        $sql = "SELECT id, username, password FROM users WHERE username = ?";
+        // First check admin_users table
+        $sql = "SELECT id, username, password, role, status FROM admin_users WHERE username = ?";
+        $stmt = mysqli_prepare($conn, $sql);
+        mysqli_stmt_bind_param($stmt, "s", $username);
+        mysqli_stmt_execute($stmt);
+        $result = mysqli_stmt_get_result($stmt);
         
-        if($stmt = mysqli_prepare($conn, $sql)){
-            mysqli_stmt_bind_param($stmt, "s", $param_username);
+        if ($result && mysqli_num_rows($result) > 0) {
+            $admin = mysqli_fetch_assoc($result);
+            if (password_verify($password, $admin['password'])) {
+                if ($admin['status'] === 'active') {
+                    // Password is correct, start a new session
+                    session_start();
+                    
+                    // Store data in session variables
+                    $_SESSION["loggedin"] = true;
+                    $_SESSION["id"] = $admin["id"];
+                    $_SESSION["username"] = $admin["username"];
+                    $_SESSION["role"] = $admin["role"];
+                    
+                    // Redirect to dashboard
+                    header("location: dashboard.php");
+                    exit;
+                } else {
+                    $login_err = "This account has been deactivated.";
+                }
+            } else {
+                $login_err = "Invalid username or password.";
+            }
+        } else {
+            // If not found in admin_users, check regular users table
+            $sql = "SELECT id, username, password FROM users WHERE username = ?";
+            $stmt = mysqli_prepare($conn, $sql);
+            mysqli_stmt_bind_param($stmt, "s", $username);
+            mysqli_stmt_execute($stmt);
+            $result = mysqli_stmt_get_result($stmt);
             
-            $param_username = $username;
-            
-            if(mysqli_stmt_execute($stmt)){
-                mysqli_stmt_store_result($stmt);
-                
-                if(mysqli_stmt_num_rows($stmt) == 1){
-                    mysqli_stmt_bind_result($stmt, $id, $username, $hashed_password);
-                    if(mysqli_stmt_fetch($stmt)){
-                        if(password_verify($password, $hashed_password)){
-                            session_start();
-                            
-                            $_SESSION["loggedin"] = true;
-                            $_SESSION["id"] = $id;
-                            $_SESSION["username"] = $username;                            
-                            
-                            header("location: dashboard.php");
-                        } else{
-                            $login_err = "Invalid username or password.";
-                        }
-                    }
-                } else{
+            if ($result && mysqli_num_rows($result) > 0) {
+                $user = mysqli_fetch_assoc($result);
+                if (password_verify($password, $user['password'])) {
+                    // Password is correct, start a new session
+                    session_start();
+                    
+                    // Store data in session variables
+                    $_SESSION["loggedin"] = true;
+                    $_SESSION["id"] = $user["id"];
+                    $_SESSION["username"] = $user["username"];
+                    $_SESSION["role"] = "user";
+                    
+                    // Redirect to dashboard
+                    header("location: dashboard.php");
+                    exit;
+                } else {
                     $login_err = "Invalid username or password.";
                 }
-            } else{
-                echo "Oops! Something went wrong. Please try again later.";
+            } else {
+                $login_err = "Invalid username or password.";
             }
-
-            mysqli_stmt_close($stmt);
         }
     }
     

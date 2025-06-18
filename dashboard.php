@@ -87,6 +87,9 @@ $recent_activities_result = mysqli_query($conn, $recent_activities_sql);
                     <a href="inventory.php"><i class="fas fa-boxes"></i> Inventory</a>
                     <a href="requisition.php"><i class="fas fa-clipboard-list"></i> Requisitions</a>
                     <a href="reports.php"><i class="fas fa-chart-bar"></i> Reports</a>
+                    <?php if (isset($_SESSION["role"]) && $_SESSION["role"] === "super_admin"): ?>
+                        <a href="admin_management.php"><i class="fas fa-users-cog"></i> Admin Management</a>
+                    <?php endif; ?>
                     <a href="logout.php"><i class="fas fa-sign-out-alt"></i> Logout</a>
                 </nav>
             </div>
